@@ -187,7 +187,7 @@ extern crate chrono;
 pub mod pool;
 pub mod buffer_queue;
 pub mod socket;
-pub mod trie;
+pub mod router;
 pub mod protocol;
 pub mod http;
 pub mod backends;
