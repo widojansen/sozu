@@ -44,6 +44,7 @@ idna = "^0.2"
 mio-extras = "^2.0"
 chrono = "0.4"
 hashbrown = "0.1"
+regex = "1.1"
 
 [dev-dependencies]
 tiny_http = "^0.6"
