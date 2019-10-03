@@ -45,6 +45,8 @@ mio-extras = "^2.0"
 chrono = "0.4"
 hashbrown = "0.1"
 regex = "1.1"
+cookie-factory = "^0.2"
+hpack = "^0.3"
 
 [dev-dependencies]
 tiny_http = "^0.6"
