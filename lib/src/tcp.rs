@@ -51,7 +51,6 @@ pub enum State {
 }
 
 pub struct Session {
-  sock:               TcpStream,
   backend:            Option<Rc<RefCell<Backend>>>,
   frontend_token:     Token,
   backend_token:      Option<Token>,
@@ -71,7 +70,6 @@ pub struct Session {
 impl Session {
   fn new(sock: TcpStream, frontend_token: Token, accept_token: Token, front_buf: Checkout<Buffer>,
     back_buf: Checkout<Buffer>, app_id: Option<String>, proxy_protocol: Option<ProxyProtocolConfig>, timeout: Timeout) -> Session {
-    let s = sock.try_clone().expect("could not clone the socket");
     let frontend_address = sock.peer_addr().ok();
     let mut frontend_buffer = None;
     let mut backend_buffer = None;
@@ -81,24 +79,24 @@ impl Session {
       Some(ProxyProtocolConfig::RelayHeader) => {
         backend_buffer = Some(back_buf);
         gauge_add!("protocol.proxy.relay", 1);
-        Some(State::RelayProxyProtocol(RelayProxyProtocol::new(s, frontend_token,
+        Some(State::RelayProxyProtocol(RelayProxyProtocol::new(sock, frontend_token,
           request_id, None, front_buf)))
       },
       Some(ProxyProtocolConfig::ExpectHeader) => {
         frontend_buffer = Some(front_buf);
         backend_buffer = Some(back_buf);
         gauge_add!("protocol.proxy.expect", 1);
-        Some(State::ExpectProxyProtocol(ExpectProxyProtocol::new(s, frontend_token, request_id)))
+        Some(State::ExpectProxyProtocol(ExpectProxyProtocol::new(sock, frontend_token, request_id)))
       },
       Some(ProxyProtocolConfig::SendHeader) => {
         frontend_buffer = Some(front_buf);
         backend_buffer = Some(back_buf);
         gauge_add!("protocol.proxy.send", 1);
-        Some(State::SendProxyProtocol(SendProxyProtocol::new(s, frontend_token, request_id, None)))
+        Some(State::SendProxyProtocol(SendProxyProtocol::new(sock, frontend_token, request_id, None)))
       },
       None => {
         gauge_add!("protocol.tcp", 1);
-        let mut pipe = Pipe::new(s, frontend_token, request_id, None, front_buf, back_buf, frontend_address, Protocol::TCP);
+        let mut pipe = Pipe::new(sock, frontend_token, request_id, None, front_buf, back_buf, frontend_address, Protocol::TCP);
         pipe.set_app_id(app_id.clone());
         Some(State::Pipe(pipe))
       }
@@ -106,7 +104,6 @@ impl Session {
 
 
     Session {
-      sock,
       backend:            None,
       frontend_token,
       backend_token:      None,
